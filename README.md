@@ -1,6 +1,10 @@
 <h4 align="center">Dynamically adjusts video encoding bitrate based on network conditions using the TCP-Friendly Rate Control (TFRC) algorithm</h4>
 
 <p align="center">
+  <img style="min-width:35%;" src="https://raw.githubusercontent.com/arsperger/slowcast/df891b5f2c117958592e824c60080890f7bdcee6/.github/slowcast.gif">
+</p>
+
+<p align="center">
   <a href="https://goreportcard.com/report/github.com/arsperger/slowcast"><img src="https://goreportcard.com/badge/github.com/arsperger/slowcast" alt="Go Report Card"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
