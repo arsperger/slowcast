@@ -1,3 +1,11 @@
+<h4 align="center">Dynamically adjusts video encoding bitrate based on network conditions using the TCP-Friendly Rate Control (TFRC) algorithm</h4>
+
+<p align="center">
+  <a href="https://goreportcard.com/report/github.com/arsperger/slowcast"><img src="https://goreportcard.com/badge/github.com/arsperger/slowcast" alt="Go Report Card"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+</p>
+<br>
+
 # SlowCast: Adaptive Video Streaming with TFRC
 
 Go (golang) implementation of TCP-Friendly Rate Control for smooth and adaptive video streaming over unreliable networks.
@@ -68,17 +76,13 @@ Additional parameters (currently hardcoded):
 
 ## Future Improvements
 
-- [] Dynamic resolution adaptation based on available bandwidth
-- [] Better zero-loss handling algorithm
-- [] Bandwidth probing for faster convergence
-- [] Enhanced congestion detection beyond packet loss
-- [] Monitoring and dynamic configuration
+- [ ] Dynamic resolution adaptation based on available bandwidth
+- [ ] Better zero-loss handling algorithm
+- [ ] Bandwidth probing for faster convergence
+- [ ] Enhanced congestion detection beyond packet loss
+- [ ] Monitoring and dynamic configuration
 
 TBD
-
-## License
-
-MIT License
 
 ## Contributors
 
