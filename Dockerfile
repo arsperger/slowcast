@@ -36,7 +36,7 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
 # Run linting with necessary environment
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/.cache/golangci-lint \
-    $(go env GOPATH)/bin/golangci-lint run --timeout 10m0s ./...
+    $(go env GOPATH)/bin/golangci-lint run --timeout 10m0s --config=.golangci.yml ./...
 
 ############################
 # Stage 2: Unit Tests      #

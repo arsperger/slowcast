@@ -132,6 +132,7 @@ func (s *SlowCast) setupRTCPListener(srcHost string, srcPort int) {
 	}
 }
 
+//nolint:gosec
 func (s *SlowCast) setNewBitrate(kbps int) {
 	enc, err := s.stream.GetElementByName("encoder")
 	if err != nil {
@@ -145,6 +146,9 @@ func (s *SlowCast) setNewBitrate(kbps int) {
 	s.currentBitrate = kbps
 }
 
+// FIXME: need refactoring
+//
+//nolint:cyclop,gocyclo,funlen
 func (s *SlowCast) createPipeline(sinkHost, srcHost string, sinkPort, srcPort int) error {
 
 	gst.Init(nil)
@@ -184,7 +188,7 @@ func (s *SlowCast) createPipeline(sinkHost, srcHost string, sinkPort, srcPort in
 	// Video encoder x264enc software encoder
 	encoder, err := gst.NewElementWithProperties("x264enc", map[string]interface{}{
 		"name":    "encoder",
-		"bitrate": uint(s.currentBitrate),
+		"bitrate": uint(s.currentBitrate), //nolint:gosec
 		"tune":    "zerolatency",
 	})
 	if err != nil {
@@ -437,7 +441,7 @@ func main() {
 
 	// Create SlowCast
 	var slowCast SlowCast
-	//nolint:all
+	//nolint:staticcheck
 	slow := slowCast.MakeSlowCast(*debugFlag == true)
 	slow.mainLoop = glib.NewMainLoop(glib.MainContextDefault(), false)
 

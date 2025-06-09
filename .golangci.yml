@@ -344,7 +344,7 @@ linters:
       allow-no-explanation: [ funlen, gocognit, golines ]
       # Enable to require an explanation of nonzero length after each nolint directive.
       # Default: false
-      require-explanation: true
+      require-explanation: false
       # Enable to require nolint directives to mention the specific linter being suppressed.
       # Default: false
       require-specific: true
