@@ -41,9 +41,10 @@ func TestNewSmoothedRTTHistoryAccumulator(t *testing.T) {
 			if !tt.wantErr {
 				if acc == nil {
 					t.Error("newSmoothedRTTHistoryAccumulator() returned nil, expected non-nil")
-				}
-				if acc.maxSize != tt.maxSize {
-					t.Errorf("newSmoothedRTTHistoryAccumulator() maxSize = %v, want %v", acc.maxSize, tt.maxSize)
+				} else {
+					if acc.maxSize != tt.maxSize {
+						t.Errorf("newSmoothedRTTHistoryAccumulator() maxSize = %v, want %v", acc.maxSize, tt.maxSize)
+					}
 				}
 				if cap(acc.history) != tt.maxSize {
 					t.Errorf("newSmoothedRTTHistoryAccumulator() capacity = %v, want %v", cap(acc.history), tt.maxSize)

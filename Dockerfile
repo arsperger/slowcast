@@ -31,7 +31,7 @@ FROM builder AS lint
 WORKDIR /app
 
 # Install golangci-lint
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.1.6
 
 # Run linting with necessary environment
 RUN --mount=type=cache,target=/root/.cache/go-build \

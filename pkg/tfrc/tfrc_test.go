@@ -354,7 +354,7 @@ func TestNowMiddle32(t *testing.T) {
 		// Only acceptable if we're at a 16-bit seconds boundary rollover
 		secs1 := val >> 16
 		secs2 := val2 >> 16
-		if !(secs1 == 0xFFFF && secs2 == 0) {
+		if secs1 != 0xFFFF || secs2 != 0 {
 			t.Errorf("nowMiddle32() did not increase as expected: %d -> %d", val, val2)
 		}
 	}
@@ -369,7 +369,7 @@ func TestNowMiddle32(t *testing.T) {
 		// Only acceptable if we're at a 16-bit seconds boundary rollover
 		secs2 := val2 >> 16
 		secs3 := val3 >> 16
-		if !(secs2 == 0xFFFF && secs3 == 0) {
+		if secs2 != 0xFFFF || secs3 != 0 {
 			t.Errorf("nowMiddle32() did not increase after 100ms: %d -> %d", val2, val3)
 		}
 	}

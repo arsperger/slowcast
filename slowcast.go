@@ -55,7 +55,9 @@ func (s *SlowCast) dumpPipelineDot() {
 
 		if os.Getenv("GST_DEBUG_DUMP_DOT_DIR") == "" {
 			cwd, _ := os.Getwd()
-			os.Setenv("GST_DEBUG_DUMP_DOT_DIR", cwd)
+			if err := os.Setenv("GST_DEBUG_DUMP_DOT_DIR", cwd); err != nil {
+				fmt.Fprintf(os.Stderr, "Error setting GST_DEBUG_DUMP_DOT_DIR: %v\n", err)
+			}
 		}
 
 		s.stream.DebugBinToDotFile(gst.DebugGraphShowAll, "slowcast-pipeline")
@@ -71,7 +73,11 @@ func (s *SlowCast) setupRTCPListener(srcHost string, srcPort int) {
 		fmt.Printf("RTCP listener error: %v\n", err)
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error closing RTCP connection: %v\n", err)
+		}
+	}()
 
 	// Initialize TFRC with initial bitrate and limits
 	controller := tfrc.New(s.currentBitrate, s.minBitrate, s.maxBitrate)
@@ -132,7 +138,10 @@ func (s *SlowCast) setNewBitrate(kbps int) {
 		fmt.Fprintf(os.Stderr, "Encoder element lookup error: %v\n", err)
 		return
 	}
-	enc.Set("bitrate", uint(kbps))
+	if err := enc.Set("bitrate", uint(kbps)); err != nil {
+		fmt.Fprintf(os.Stderr, "Error setting encoder bitrate: %v\n", err)
+		return
+	}
 	s.currentBitrate = kbps
 }
 
@@ -205,11 +214,21 @@ func (s *SlowCast) createPipeline(sinkHost, srcHost string, sinkPort, srcPort in
 	}
 
 	// Configure rtpsession for RTCP SR sending
-	rtpSession.Set("rtp-profile", 1)                        // 1 - AVP, 2 = AVPF
-	rtpSession.Set("rtcp-min-interval", uint64(5000000000)) // 5 seconds in us
-	rtpSession.Set("rtcp-fraction", 0.05)
-	rtpSession.Set("bandwidth", 0)
-	rtpSession.Set("rtcp-sync-send-time", true)
+	if err := rtpSession.Set("rtp-profile", 1); err != nil { // 1 - AVP, 2 = AVPF
+		return fmt.Errorf("failed to set rtp-profile: %w", err)
+	}
+	if err := rtpSession.Set("rtcp-min-interval", uint64(5000000000)); err != nil { // 5 seconds in us
+		return fmt.Errorf("failed to set rtcp-min-interval: %w", err)
+	}
+	if err := rtpSession.Set("rtcp-fraction", 0.05); err != nil {
+		return fmt.Errorf("failed to set rtcp-fraction: %w", err)
+	}
+	if err := rtpSession.Set("bandwidth", 0); err != nil {
+		return fmt.Errorf("failed to set bandwidth: %w", err)
+	}
+	if err := rtpSession.Set("rtcp-sync-send-time", true); err != nil {
+		return fmt.Errorf("failed to set rtcp-sync-send-time: %w", err)
+	}
 
 	// Create RTP funnel for combining payloaded streams
 	rtpFunnel, err := gst.NewElement("funnel")
@@ -368,11 +387,15 @@ func (s *SlowCast) runPipeline() error {
 
 	defer func() {
 		fmt.Println("Shutting down pipeline...")
-		s.stream.SetState(gst.StateNull)
+		if err := s.stream.SetState(gst.StateNull); err != nil {
+			fmt.Fprintf(os.Stderr, "Error setting pipeline to NULL state: %v\n", err)
+		}
 	}()
 
 	// start PLAYING
-	s.stream.SetState(gst.StatePlaying)
+	if err := s.stream.SetState(gst.StatePlaying); err != nil {
+		return fmt.Errorf("failed to set pipeline to PLAYING state: %w", err)
+	}
 
 	return s.mainLoop.RunError()
 }
@@ -414,6 +437,7 @@ func main() {
 
 	// Create SlowCast
 	var slowCast SlowCast
+	// nolint:all
 	slow := slowCast.MakeSlowCast(*debugFlag == true)
 	slow.mainLoop = glib.NewMainLoop(glib.MainContextDefault(), false)
 
