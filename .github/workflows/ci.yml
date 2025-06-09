@@ -26,7 +26,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
-        run: go version
+      - run: go version
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
@@ -45,6 +45,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
+      - run: go version
 
 #      - name: Install GStreamer dependencies
 #        run: |
