@@ -214,19 +214,19 @@ func (s *SlowCast) createPipeline(sinkHost, srcHost string, sinkPort, srcPort in
 	}
 
 	// Configure rtpsession for RTCP SR sending
-	if err := rtpSession.Set("rtp-profile", 1); err != nil { // 1 - AVP, 2 = AVPF
+	if err = rtpSession.Set("rtp-profile", 1); err != nil { // 1 - AVP, 2 = AVPF
 		return fmt.Errorf("failed to set rtp-profile: %w", err)
 	}
-	if err := rtpSession.Set("rtcp-min-interval", uint64(5000000000)); err != nil { // 5 seconds in us
+	if err = rtpSession.Set("rtcp-min-interval", uint64(5000000000)); err != nil { // 5 seconds in us
 		return fmt.Errorf("failed to set rtcp-min-interval: %w", err)
 	}
-	if err := rtpSession.Set("rtcp-fraction", 0.05); err != nil {
+	if err = rtpSession.Set("rtcp-fraction", 0.05); err != nil {
 		return fmt.Errorf("failed to set rtcp-fraction: %w", err)
 	}
-	if err := rtpSession.Set("bandwidth", 0); err != nil {
+	if err = rtpSession.Set("bandwidth", 0); err != nil {
 		return fmt.Errorf("failed to set bandwidth: %w", err)
 	}
-	if err := rtpSession.Set("rtcp-sync-send-time", true); err != nil {
+	if err = rtpSession.Set("rtcp-sync-send-time", true); err != nil {
 		return fmt.Errorf("failed to set rtcp-sync-send-time: %w", err)
 	}
 
@@ -272,14 +272,14 @@ func (s *SlowCast) createPipeline(sinkHost, srcHost string, sinkPort, srcPort in
 	}
 
 	// Add all elements to pipeline
-	if err := pipeline.AddMany(src, capsFilterIn, convert, capsFilterOut,
+	if err = pipeline.AddMany(src, capsFilterIn, convert, capsFilterOut,
 		encoder, pay, rtpCapsFilter, rtpSession, rtpFunnel,
 		rtpSink, rtcpSink, rtcpSrc); err != nil {
 		return fmt.Errorf("failed to add elements to pipeline: %w", err)
 	}
 
 	// Link video capture elements
-	if err := gst.ElementLinkMany(src, capsFilterIn, convert, capsFilterOut, encoder, pay, rtpCapsFilter); err != nil {
+	if err = gst.ElementLinkMany(src, capsFilterIn, convert, capsFilterOut, encoder, pay, rtpCapsFilter); err != nil {
 		return fmt.Errorf("failed to link video elements: %w", err)
 	}
 
@@ -437,7 +437,7 @@ func main() {
 
 	// Create SlowCast
 	var slowCast SlowCast
-	// nolint:all
+	//nolint:all
 	slow := slowCast.MakeSlowCast(*debugFlag == true)
 	slow.mainLoop = glib.NewMainLoop(glib.MainContextDefault(), false)
 
@@ -457,7 +457,7 @@ func main() {
 	fmt.Printf("Streaming on RTP %s:%d, listening RTCP on %s:%d. Ctrl+C to exit.\n",
 		sinkHost, sinkPort, srcHost, srcPort+1)
 
-	if err := slow.runPipeline(); err != nil {
+	if err = slow.runPipeline(); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to run pipeline: %v\n", err)
 		os.Exit(1)
 	}

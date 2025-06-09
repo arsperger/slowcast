@@ -182,6 +182,8 @@ func (t *Tfrc) GetSmoothedRTT() float64 {
 // NowMiddle32 returns the "LSR"‐style 32‐bit value:
 // upper 16 bits = least significant 16 bits of seconds since NTP epoch
 // lower 16 bits = most significant 16 bits of the fractional second
+//
+//nolint:gosec
 func nowMiddle32() uint32 {
 	t := time.Now().UTC()
 	// Full seconds since NTP epoch
