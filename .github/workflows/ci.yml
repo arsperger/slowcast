@@ -26,7 +26,12 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
-      - run: go version
+
+      - name: Install GLib and GStreamer dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglib2.0-dev libgstreamer1.0-dev \
+          libgstreamer-plugins-base1.0-dev pkg-config
 
       - run: go mod tidy
       - run: go mod download
