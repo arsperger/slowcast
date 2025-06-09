@@ -41,7 +41,7 @@ type Tfrc struct {
 	lastLossReportTime time.Time
 }
 
-func New(init, min, max int) *Tfrc {
+func New(init, min, max int) *Tfrc { //nolint:predeclared
 	if init < min || init > max {
 		panic(fmt.Sprintf("Initial bitrate %d must be between min %d and max %d", init, min, max))
 	}
@@ -71,11 +71,11 @@ func New(init, min, max int) *Tfrc {
 
 	return &Tfrc{
 		smoothedRTTHistory: smoothedRTTHistoryAccumulator,
-		smoothedRTT:        0.1,                   // initial RTT estimate
-		ttrParamsAlpha:     0.2,                   // smoothing factor
-		avgPacketSize:      1200.0,                // average RTP payload size
-		minBitrate:         minBitrate,            // Kbps
-		maxBitrate:         maxBitrate,            // Kbps
+		smoothedRTT:        0.1, // initial RTT estimate
+		ttrParamsAlpha:     0.2, // smoothing factor
+		avgPacketSize:      1200.0,
+		minBitrate:         minBitrate,
+		maxBitrate:         maxBitrate,
 		pSample:            0.0,                   // last fraction lost sample
 		rttSampe:           0.0,                   // last RTT sample
 		currentBitrate:     currentBitrate,        // initial bitrate in Kbps
@@ -104,7 +104,7 @@ func (t *Tfrc) recordLossEvent(fractionLost uint8, now time.Time) {
 	t.lastLossReportTime = now
 }
 
-// Return the last recorded fraction lost
+// GetLastFraction Return the last recorded fraction lost
 func (t *Tfrc) GetLastFraction() float64 {
 	return t.pSample
 }
@@ -174,7 +174,7 @@ func (t *Tfrc) updateSmoothedRTT(rtt float64) {
 	t.recordRTT(t.smoothedRTT)
 }
 
-// Return the current smoothed RTT
+// GetSmoothedRTT returns the current smoothed RTT
 func (t *Tfrc) GetSmoothedRTT() float64 {
 	return t.smoothedRTT
 }
@@ -182,6 +182,8 @@ func (t *Tfrc) GetSmoothedRTT() float64 {
 // NowMiddle32 returns the "LSR"‐style 32‐bit value:
 // upper 16 bits = least significant 16 bits of seconds since NTP epoch
 // lower 16 bits = most significant 16 bits of the fractional second
+//
+//nolint:gosec
 func nowMiddle32() uint32 {
 	t := time.Now().UTC()
 	// Full seconds since NTP epoch
@@ -196,7 +198,7 @@ func nowMiddle32() uint32 {
 	return (secs16 << 16) | frac16
 }
 
-// computeTFRCBitrate computes the TFRC bitrate based on RFC 5348 and RFC 8083
+// ComputeTFRCBitrate computes the TFRC bitrate based on RFC 5348 and RFC 8083
 func (t *Tfrc) ComputeTFRCBitrate() int {
 	var trend int
 
@@ -225,7 +227,7 @@ func (t *Tfrc) ComputeTFRCBitrate() int {
 	}
 
 	// 3. Calculate RTO and terms
-	R := t.smoothedRTT
+	R := t.smoothedRTT //nolint:gocritic // alignment with RFC 5348
 	rto := 4 * R
 	term1 := R * math.Sqrt(2*p/3)
 	term2 := rto * (3 * math.Sqrt(3*p/8) * p * (1 + 32*p*p))

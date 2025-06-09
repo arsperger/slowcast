@@ -42,10 +42,8 @@ func TestNewLossReportAccumulator(t *testing.T) {
 			if !tt.wantErr {
 				if acc == nil {
 					t.Error("newLossReportAccumulator() returned nil, expected non-nil")
-				} else {
-					if acc.maxSize != tt.maxSize {
-						t.Errorf("newLossReportAccumulator() maxSize = %v, want %v", acc.maxSize, tt.maxSize)
-					}
+				} else if acc.maxSize != tt.maxSize {
+					t.Errorf("newLossReportAccumulator() maxSize = %v, want %v", acc.maxSize, tt.maxSize)
 				}
 				if cap(acc.lossReports) != tt.maxSize {
 					t.Errorf("newLossReportAccumulator() capacity = %v, want %v", cap(acc.lossReports), tt.maxSize)
