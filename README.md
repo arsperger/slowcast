@@ -6,6 +6,7 @@
 
 <p align="center">
   <a href="https://goreportcard.com/report/github.com/arsperger/slowcast"><img src="https://goreportcard.com/badge/github.com/arsperger/slowcast" alt="Go Report Card"></a>
+  <a href="https://codecov.io/gh/arsperger/slowcast"><img src="https://codecov.io/gh/arsperger/slowcast/branch/main/graph/badge.svg" alt="Coverage Status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
 <br>
@@ -15,6 +16,8 @@
 Go (golang) implementation of TCP-Friendly Rate Control for smooth and adaptive video streaming over unreliable networks.
 
 SlowCast dynamically adjusts video encoding bitrate based on network conditions using the TCP-Friendly Rate Control (TFRC) algorithm.
+
+This implementation follows RFC 5348 for the TFRC algorithm and RFC 8083 for RTP/RTCP extensions.
 
 ## Installation on Linux (x86_64)
 
@@ -78,18 +81,15 @@ Additional parameters (currently hardcoded):
 - No dynamic resolution/framerate adjustment based on bitrate changes
 - new to come
 
-## Future Improvements
+## Future possible improvements
 
-- [ ] Dynamic resolution adaptation based on available bandwidth
-- [ ] Better zero-loss handling algorithm
+- [ ] Dynamic resolution and framerate adaptation based on available bandwidth
+- [ ] Better zero-loss handling algorithm (trend detection)
 - [ ] Bandwidth probing for faster convergence
-- [ ] Enhanced congestion detection beyond packet loss
+- [ ] Enhanced congestion detection beyond packet loss (jitter)
 - [ ] Monitoring and dynamic configuration
-
-TBD
+- [ ] Implement Circuit Breakers RFC8083
 
 ## Contributors
 
 @arsperger
-
-📢 Note: This implementation follows RFC 5348 for the TFRC algorithm and RFC 8083 for RTP/RTCP extensions
