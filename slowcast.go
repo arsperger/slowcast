@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
@@ -82,6 +84,8 @@ func (s *SlowCast) setupRTCPListener(srcHost string, srcPort int) {
 	// Initialize TFRC with initial bitrate and limits
 	controller := tfrc.New(s.currentBitrate, s.minBitrate, s.maxBitrate)
 
+	timeStarted := time.Now()
+
 	buf := make([]byte, 1500)
 	for {
 		n, _, err := conn.ReadFrom(buf)
@@ -102,14 +106,15 @@ func (s *SlowCast) setupRTCPListener(srcHost string, srcPort int) {
 			case *rtcp.ReceiverReport:
 				for _, report := range rr.Reports {
 
+					elapsed := time.Since(timeStarted).Seconds()
 					// Get RTCP report data
 					controller.PreProcessRTCP(now, report.LastSenderReport, report.Delay, report.FractionLost)
 
-					fmt.Printf("RTCP RR: loss=%.6f, rtt=%.4fs, smoothed RTT=%.4fs\n",
-						controller.GetLastFraction(), controller.GetRttSample(), controller.GetSmoothedRTT())
+					// fmt.Printf("{RTCP [%d] RR: elapsed=%.3f loss=%.6f, rtt=%.4fs, smoothed RTT=%.4fs, jitter=%d\n",
+					//	report.SSRC, elapsed, controller.GetLastFraction(), controller.GetRttSample(), controller.GetSmoothedRTT(), report.Jitter)
 
-					fmt.Printf("RTCP Jitter: %d, LSR: %d, DLSR: %d\n",
-						report.Jitter, report.LastSenderReport, report.Delay)
+					fmt.Printf("{\"SSRC\": %d, \"elapsed\": %.3f, \"loss\": %.6f, \"rtt\": %.4f, \"smoothed_rtt\": %.4f, \"jitter\": %d, \"type\": \"RTCP_RR\"}\n",
+						report.SSRC, elapsed, controller.GetLastFraction(), controller.GetRttSample(), controller.GetSmoothedRTT(), report.Jitter)
 
 					// Pace updates
 					if time.Since(s.lastChange) < s.changeInterval {
@@ -218,8 +223,8 @@ func (s *SlowCast) createPipeline(sinkHost, srcHost string, sinkPort, srcPort in
 	}
 
 	// Configure rtpsession for RTCP SR sending
-	if err = rtpSession.Set("rtp-profile", 1); err != nil { // 1 - AVP, 2 = AVPF
-		return fmt.Errorf("failed to set rtp-profile: %w", err)
+	if err = rtpSession.Set("rtp-profile", uint64(2)); err != nil { // 1 - AVP, 2 = AVPF
+		fmt.Println("Warning: failed to set rtp-profile, using default")
 	}
 	if err = rtpSession.Set("rtcp-min-interval", uint64(5000000000)); err != nil { // 5 seconds in us
 		return fmt.Errorf("failed to set rtcp-min-interval: %w", err)
@@ -227,8 +232,8 @@ func (s *SlowCast) createPipeline(sinkHost, srcHost string, sinkPort, srcPort in
 	if err = rtpSession.Set("rtcp-fraction", 0.05); err != nil {
 		return fmt.Errorf("failed to set rtcp-fraction: %w", err)
 	}
-	if err = rtpSession.Set("bandwidth", 0); err != nil {
-		return fmt.Errorf("failed to set bandwidth: %w", err)
+	if err = rtpSession.Set("bandwidth", uint64(0)); err != nil {
+		fmt.Println("Warning: failed to set bandwidth, using default")
 	}
 	if err = rtpSession.Set("rtcp-sync-send-time", true); err != nil {
 		return fmt.Errorf("failed to set rtcp-sync-send-time: %w", err)
@@ -377,17 +382,69 @@ func (s *SlowCast) runPipeline() error {
 			fmt.Fprintf(os.Stderr, "GStreamer error: %v\n", gErr)
 			s.mainLoop.Quit()
 		default:
-			fmt.Println(msg)
+			fmt.Println(msg) // can be verbose
 		}
 
 		return true
 	})
 
+	runCtx, cancelRun := context.WithCancel(context.Background())
+	defer cancelRun()
+
 	go func() {
-		<-sigs
-		fmt.Println("Shutting down by signal...")
-		s.mainLoop.Quit()
+		select {
+		case <-sigs:
+			fmt.Println("Shutting down by signal...")
+			s.mainLoop.Quit()
+		case <-runCtx.Done():
+			return
+		}
 	}()
+
+	// polling bitrate in a separate goroutine
+	go func(ctx context.Context, pipeline *gst.Pipeline) {
+		ticker := time.NewTicker(100 * time.Millisecond)
+		defer ticker.Stop()
+
+		encoder, err := pipeline.GetElementByName("encoder")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Bitrate Polling: Failed to get encoder element: %v\n", err)
+			return
+		}
+
+		startTime := time.Now()
+		fmt.Println("Bitrate Polling: Started.")
+		for {
+			select {
+			case <-ticker.C:
+				bitrateVal, errGet := encoder.GetProperty("bitrate")
+				if errGet != nil {
+					// Log error but continue, as element might be in a transient state
+					fmt.Fprintf(os.Stderr, "Bitrate Polling: Failed to get bitrate property: %v\n", errGet)
+					continue
+				}
+				if bitrateUint, ok := bitrateVal.(uint); ok {
+					elapsed := time.Since(startTime).Seconds()
+					logEntry := map[string]interface{}{
+						"type":    "poll_bitrate",
+						"elapsed": fmt.Sprintf("%.3f", elapsed),
+						"bitrate": bitrateUint,
+					}
+					jsonEntry, err := json.Marshal(logEntry)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "Bitrate Polling: Failed to marshal JSON: %v\n", err)
+					} else {
+						fmt.Println(string(jsonEntry))
+					}
+				} else {
+					fmt.Fprintf(os.Stderr, "Bitrate Polling: Bitrate property is not of type uint, got %T\n", bitrateVal)
+				}
+			case <-ctx.Done():
+				fmt.Println("Bitrate Polling: Stopped.")
+				return
+			}
+		}
+	}(runCtx, s.stream)
 
 	defer func() {
 		fmt.Println("Shutting down pipeline...")
@@ -400,6 +457,7 @@ func (s *SlowCast) runPipeline() error {
 	if err := s.stream.SetState(gst.StatePlaying); err != nil {
 		return fmt.Errorf("failed to set pipeline to PLAYING state: %w", err)
 	}
+	fmt.Println("Pipeline is PLAYING. Starting main loop and bitrate polling...")
 
 	return s.mainLoop.RunError()
 }
