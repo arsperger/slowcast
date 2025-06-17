@@ -202,25 +202,25 @@ func nowMiddle32() uint32 {
 func (t *Tfrc) ComputeTFRCBitrate() int {
 	var trend int
 
-	fmt.Printf("Current bitrate: %d Kbps\n", t.currentBitrate)
+	// TODO: #VOP-40 fmt.Printf("Current bitrate: %d Kbps\n", t.currentBitrate)
 
 	// 1. Calculate loss-event rate p via RFC8083
 	p := t.computeLossEventRate()
-	fmt.Printf("Loss event rate p=%.4f\n", p)
+	// TODO: #VOP-40 fmt.Printf("Loss event rate p=%.4f\n", p)
 
 	// 2. Check if loss is zero
-	// TODO: improve this approach: if RTT is stable/decreasing, cautiously increase bitrate 5%?
+	// TODO: #VOP-32 improve this approach: if RTT is stable/decreasing, cautiously increase bitrate 5%?
 	if p <= 0 {
 		trend = t.computeRTTTrend()
 		var target int
 		switch trend {
 		case 1:
 			// RTT increasing: hold current bitrate
-			fmt.Printf("RTT increasing, holding current bitrate: %d Kbps\n", t.currentBitrate)
+			// TODO: #VOP-40 fmt.Printf("RTT increasing, holding current bitrate: %d Kbps\n", t.currentBitrate)
 			return t.currentBitrate
 		case -1, 0:
 			// RTT stable or decreasing: ramp toward ceiling
-			fmt.Printf("RTT stable or decreasing, ramping toward max bitrate: %d Kbps\n", t.maxBitrate)
+			// TODO: #VOP-40 fmt.Printf("RTT stable or decreasing, ramping toward max bitrate: %d Kbps\n", t.maxBitrate)
 			target = t.maxBitrate
 		}
 		return t.smoothRate(t.currentBitrate, target)
@@ -232,17 +232,18 @@ func (t *Tfrc) ComputeTFRCBitrate() int {
 	term1 := R * math.Sqrt(2*p/3)
 	term2 := rto * (3 * math.Sqrt(3*p/8) * p * (1 + 32*p*p))
 	if term1+term2 <= 0 {
-		fmt.Println("Invalid TFRC parameters, using current bitrate")
+		// FIXME: we must never reach this point..
+		// TODO: VOP-40 fmt.Println("Invalid TFRC parameters, using current bitrate")
 		return t.currentBitrate
 	}
-	fmt.Printf("RTT=%.3fs, p=%.4f, RTO=%.3fs, term1=%.4f, term2=%.4f\n", t.smoothedRTT, p, rto, term1, term2)
+	// fmt.Printf("RTT=%.3fs, p=%.4f, RTO=%.3fs, term1=%.4f, term2=%.4f\n", t.smoothedRTT, p, rto, term1, term2)
 
 	// 4. Throughput in bytes/sec
 	x := t.avgPacketSize / (term1 + term2)
-	fmt.Printf("TFRC x=%.4f bytes/sec\n", x)
+	// TODO: VOP-40 fmt.Printf("TFRC x=%.4f bytes/sec\n", x)
 	// Convert to Kbps
 	targetKbps := int(x * 8 / 1000)
-	fmt.Printf("TFRC target=%d Kbps\n", targetKbps)
+	// fmt.Printf("TFRC target=%d Kbps\n", targetKbps)
 
 	// TODO: 5. clamp targetKbps to min/max bitrate?
 
@@ -253,13 +254,13 @@ func (t *Tfrc) ComputeTFRCBitrate() int {
 // smoothRate applies exponential smoothing toward target
 func (t *Tfrc) smoothRate(current, target int) int {
 	newRate := int(float64(current) + t.ttrParamsAlpha*(float64(target)-float64(current)))
-	fmt.Printf("TFRC smoothed=%d Kbps\n", newRate)
+	// fmt.Printf("TFRC smoothed=%d Kbps\n", newRate)
 	if newRate < t.minBitrate {
 		newRate = t.minBitrate
 	} else if newRate > t.maxBitrate {
 		newRate = t.maxBitrate
 	}
-	fmt.Printf("TFRC clamped=%d Kbps\n", newRate)
+	// fmt.Printf("TFRC clamped=%d Kbps\n", newRate)
 	t.currentBitrate = newRate
 	return newRate
 }

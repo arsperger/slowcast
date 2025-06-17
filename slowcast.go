@@ -126,7 +126,10 @@ func (s *SlowCast) setupRTCPListener(srcHost string, srcPort int) {
 					if newBr != s.currentBitrate {
 						s.setNewBitrate(newBr)
 						s.lastChange = now
-						fmt.Printf("Updated bitrate %d -> %d Kbps\n", s.currentBitrate, newBr)
+						// fmt.Printf("Updated bitrate %d -> %d Kbps\n", s.currentBitrate, newBr)
+						fmt.Printf("{\"SSRC\": %d, \"elapsed\": %.3f, \"loss\": %.6f, \"rtt\": %.4f, \"smoothed_rtt\": %.4f, \"bitrate_new\": %d, \"type\": \"computed_bitrate\"}\n",
+							report.SSRC, elapsed, controller.GetLastFraction(), controller.GetRttSample(), controller.GetSmoothedRTT(), newBr)
+
 						// TODO: change resolution and framerate based on new bitrate
 					}
 				}
