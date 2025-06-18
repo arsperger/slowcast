@@ -51,12 +51,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     go test -v -race -coverprofile=coverage.txt -covermode=atomic ./... && \
     go tool cover -func=coverage.txt
 
-# Create a specific output directory for easier extraction
-RUN mkdir -p /output && cp coverage.txt /output/
-
-# A specific extraction stage to use with --output
-#FROM scratch AS coverage-report
-#COPY --from=unit-test /output/coverage.txt /
+# TODO: unit-test stage to run via Makefile
 
 ############################
 # Stage 3: Build           #
